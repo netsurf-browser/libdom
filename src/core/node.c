@@ -1827,8 +1827,8 @@ dom_exception _dom_node_set_user_data(dom_node_internal *node,
  * \param result  Pointer to location to receive result
  * \return DOM_NO_ERR.
  */
-dom_exception _dom_node_get_user_data(dom_node_internal *node,
-		dom_string *key, void **result)
+dom_exception _dom_node_get_user_data(const dom_node_internal *node,
+		const dom_string *key, void **result)
 {
 	struct dom_user_data *ud = NULL;
 

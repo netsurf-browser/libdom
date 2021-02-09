@@ -182,8 +182,8 @@ dom_exception _dom_node_get_feature(dom_node_internal *node,
 dom_exception _dom_node_set_user_data(dom_node_internal *node,
 		dom_string *key, void *data,
 		dom_user_data_handler handler, void **result);
-dom_exception _dom_node_get_user_data(dom_node_internal *node,
-		dom_string *key, void **result);
+dom_exception _dom_node_get_user_data(const dom_node_internal *node,
+		const dom_string *key, void **result);
 
 #define DOM_NODE_EVENT_TARGET_VTABLE \
 	_dom_node_add_event_listener, \

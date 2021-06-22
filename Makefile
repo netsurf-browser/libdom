@@ -149,6 +149,8 @@ INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/html_isindex_element.h
 INSTALL_ITEMS := $(INSTALL_ITEMS) /$(LIBDIR)/pkgconfig:lib$(COMPONENT).pc.in
 INSTALL_ITEMS := $(INSTALL_ITEMS) /$(LIBDIR):$(OUTPUT)
 
+REQUIRED_PKGS := $(REQUIRED_PKGS) libwapcaplet
+
 ifeq ($(WITH_LIBXML_BINDING),yes)
   REQUIRED_PKGS := $(REQUIRED_PKGS) libxml-2.0
 endif

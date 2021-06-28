@@ -312,6 +312,15 @@ bool dump_dom_structure(dom_node *node, int depth)
 	return true;
 }
 
+/* LWC leak callback */
+void sd__fini_lwc_callback(lwc_string *str, void *pw)
+{
+	(void)(pw);
+
+	fprintf(stderr, "Leaked string: %.*s\n",
+			(int)lwc_string_length(str),
+			lwc_string_data(str));
+}
 
 /**
  * Main entry point from OS.
@@ -355,6 +364,7 @@ int main(int argc, char **argv)
 	dom_node_unref(doc);
 
 	dom_namespace_finalise();
+	lwc_iterate_strings(sd__fini_lwc_callback, NULL);
 	return EXIT_SUCCESS;
 }
 

@@ -354,6 +354,7 @@ int main(int argc, char **argv)
 	/* Finished with the dom_document */
 	dom_node_unref(doc);
 
+	dom_namespace_finalise();
 	return EXIT_SUCCESS;
 }
 

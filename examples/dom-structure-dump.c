@@ -44,6 +44,7 @@
 #include <string.h>
 
 #include <dom/dom.h>
+#include <dom/walk.h>
 #include <dom/bindings/hubbub/parser.h>
 
 
@@ -181,6 +182,12 @@ bool dump_dom_element_attribute(dom_node *node, char *attribute)
 	return true;
 }
 
+static inline void dump_indent(int depth)
+{
+	for (int i = 0; i < depth; i++) {
+		printf("  ");
+	}
+}
 
 /**
  * Print a line in a DOM structure dump for an element
@@ -189,24 +196,12 @@ bool dump_dom_element_attribute(dom_node *node, char *attribute)
  * \param depth  The node's depth
  * \return  true on success, or false on error
  */
-bool dump_dom_element(dom_node *node, int depth)
+bool dump_dom_element(dom_node *node, int depth, bool close)
 {
 	dom_exception exc;
 	dom_string *node_name = NULL;
-	dom_node_type type;
-	int i;
 	const char *string;
 	size_t length;
-
-	/* Only interested in element nodes */
-	exc = dom_node_get_node_type(node, &type);
-	if (exc != DOM_NO_ERR) {
-		printf("Exception raised for node_get_node_type\n");
-		return false;
-	} else if (type != DOM_ELEMENT_NODE) {
-		/* Nothing to print */
- 		return true;
-	}
 
 	/* Get element name */
 	exc = dom_node_get_node_name(node, &node_name);
@@ -215,48 +210,84 @@ bool dump_dom_element(dom_node *node, int depth)
 		return false;
 	} else if (node_name == NULL) {
 		printf("Broken: root_name == NULL\n");
- 		return false;
+		return false;
 	}
 
 	/* Print ASCII tree structure for current node */
-	if (depth > 0) {
-		for (i = 0; i < depth; i++) {
-			printf("| ");
-		}
-		printf("+-");
-	}
+	dump_indent(depth);
 
 	/* Get string data and print element name */
 	string = dom_string_data(node_name);
 	length = dom_string_byte_length(node_name);
-	printf("[%.*s]", (int)length, string);
-	
-	if (length == 5 && strncmp(string, "title", 5) == 0) {
-		/* Title tag, gather the title */
-		dom_string *str;
-		exc = dom_node_get_text_content(node, &str);
-		if (exc == DOM_NO_ERR && str != NULL) {
-			printf(" $%.*s$", (int)dom_string_byte_length(str),
-			       dom_string_data(str));
-			dom_string_unref(str);
+
+	/* TODO: Some elements don't have close tags; only print close tags for
+	 * those that do. */
+	printf("<%s%.*s", close ? "/" : "", (int)length, string);
+
+	dom_string_unref(node_name);
+
+	if (!close) {
+		if (length == 5 && strncmp(string, "title", 5) == 0) {
+			/* Title tag, gather the title */
+			dom_string *s;
+			exc = dom_node_get_text_content(node, &s);
+			if (exc == DOM_NO_ERR && s != NULL) {
+				printf(" $%.*s$",
+						(int)dom_string_byte_length(s),
+						dom_string_data(s));
+				dom_string_unref(s);
+			}
+		}
+
+		/* Print the element's id & class, if it has them */
+		if (dump_dom_element_attribute(node, "id") == false ||
+		    dump_dom_element_attribute(node, "class") == false) {
+			/* Error occured */
+			printf(">\n");
+			return false;
 		}
 	}
 
-	/* Finished with the node_name dom_string */
-	dom_string_unref(node_name);
-
-	/* Print the element's id & class, if it has them */
-	if (dump_dom_element_attribute(node, "id") == false ||
-			dump_dom_element_attribute(node, "class") == false) {
-		/* Error occured */
-		printf("\n");
-		return false;
-	}
-
-	printf("\n");
+	printf(">\n");
 	return true;
 }
 
+/**
+ * Structure dump callback for DOM walker.
+ */
+enum dom_walk_cmd dump_dom_structure__cb(
+		enum dom_walk_stage stage,
+		dom_node_type type,
+		dom_node *node,
+		void *ctx)
+{
+	int *depth = ctx;
+
+	switch (type) {
+	case DOM_ELEMENT_NODE:
+		switch (stage) {
+		case DOM_WALK_STAGE_ENTER:
+			(*depth)++;
+			if (!dump_dom_element(node, *depth, false)) {
+				return DOM_WALK_CMD_ABORT;
+			}
+			break;
+
+		case DOM_WALK_STAGE_LEAVE:
+			if (!dump_dom_element(node, *depth, true)) {
+				return DOM_WALK_CMD_ABORT;
+			}
+			(*depth)--;
+			break;
+		}
+		break;
+
+	default:
+		break;
+	}
+
+	return DOM_WALK_CMD_CONTINUE;
+}
 
 /**
  * Walk though a DOM (sub)tree, in depth first order, printing DOM structure.
@@ -267,46 +298,20 @@ bool dump_dom_element(dom_node *node, int depth)
 bool dump_dom_structure(dom_node *node, int depth)
 {
 	dom_exception exc;
-	dom_node *child;
 
-	/* Print this node's entry */
-	if (dump_dom_element(node, depth) == false) {
-		/* There was an error; return */
+	if (!dump_dom_element(node, depth, false)) {
 		return false;
 	}
 
-	/* Get the node's first child */
-	exc = dom_node_get_first_child(node, &child);
+	exc = libdom_treewalk(DOM_WALK_ENABLE_ALL,
+			dump_dom_structure__cb,
+			node, &depth);
 	if (exc != DOM_NO_ERR) {
-		printf("Exception raised for node_get_first_child\n");
 		return false;
-	} else if (child != NULL) {
-		/* node has children;  decend to children's depth */
-		depth++;
+	}
 
-		/* Loop though all node's children */
-		do {
-			dom_node *next_child;
-
-			/* Visit node's descendents */
-			if (dump_dom_structure(child, depth) == false) {
-				/* There was an error; return */
-				dom_node_unref(child);
-				return false;
-			}
-
-			/* Go to next sibling */
-			exc = dom_node_get_next_sibling(child, &next_child);
-			if (exc != DOM_NO_ERR) {
-				printf("Exception raised for "
-						"node_get_next_sibling\n");
-				dom_node_unref(child);
-				return false;
-			}
-
-			dom_node_unref(child);
-			child = next_child;
-		} while (child != NULL); /* No more children */
+	if (!dump_dom_element(node, depth, true)) {
+		return false;
 	}
 
 	return true;

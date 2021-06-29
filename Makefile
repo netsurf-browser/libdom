@@ -56,7 +56,7 @@ include $(NSBUILD)/Makefile.top
 # Extra installation rules
 Is := include/dom
 I := /$(INCLUDEDIR)/dom
-INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/dom.h;$(Is)/functypes.h;$(Is)/inttypes.h
+INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/dom.h;$(Is)/functypes.h;$(Is)/inttypes.h;$(Is)/walk.h
 
 Is := include/dom/core
 I := /$(INCLUDEDIR)/dom/core

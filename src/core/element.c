@@ -1234,7 +1234,7 @@ dom_exception _dom_element_has_class(struct dom_element *element,
  *
  * \param element   Element to consider
  * \param name      Node name to look for
- * \param ancestor  Pointer to location to receive node pointer
+ * \param ancestor  Pointer to location to receive unreffed node pointer
  * \return DOM_NO_ERR.
  */
 dom_exception dom_element_named_ancestor_node(dom_element *element,
@@ -1264,7 +1264,7 @@ dom_exception dom_element_named_ancestor_node(dom_element *element,
  *
  * \param element  Element to consider
  * \param name     Node name to look for
- * \param parent   Pointer to location to receive node pointer
+ * \param parent   Pointer to location to receive unreffed node pointer
  * \return DOM_NO_ERR.
  */
 dom_exception dom_element_named_parent_node(dom_element *element,
@@ -1294,7 +1294,7 @@ dom_exception dom_element_named_parent_node(dom_element *element,
  *
  * \param element  Element to consider
  * \param name     Node name to look for
- * \param parent   Pointer to location to receive node pointer
+ * \param parent   Pointer to location to receive unreffed node pointer
  * \return DOM_NO_ERR.
  */
 dom_exception dom_element_parent_node(dom_element *element,

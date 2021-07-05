@@ -1232,9 +1232,12 @@ dom_exception _dom_element_has_class(struct dom_element *element,
 /**
  * Get a named ancestor node
  *
+ * If the caller wants to keep the returned node around, it must take its
+ * own ref.  This call returns a borrow.
+ *
  * \param element   Element to consider
  * \param name      Node name to look for
- * \param ancestor  Pointer to location to receive unreffed node pointer
+ * \param parent   Pointer to location to receive borrowed node pointer
  * \return DOM_NO_ERR.
  */
 dom_exception dom_element_named_ancestor_node(dom_element *element,
@@ -1262,9 +1265,12 @@ dom_exception dom_element_named_ancestor_node(dom_element *element,
 /**
  * Get a named parent node
  *
+ * If the caller wants to keep the returned node around, it must take its
+ * own ref.  This call returns a borrow.
+ *
  * \param element  Element to consider
  * \param name     Node name to look for
- * \param parent   Pointer to location to receive unreffed node pointer
+ * \param parent   Pointer to location to receive borrowed node pointer
  * \return DOM_NO_ERR.
  */
 dom_exception dom_element_named_parent_node(dom_element *element,
@@ -1292,9 +1298,12 @@ dom_exception dom_element_named_parent_node(dom_element *element,
 /**
  * Get a named parent node
  *
+ * If the caller wants to keep the returned node around, it must take its
+ * own ref.  This call returns a borrow.
+ *
  * \param element  Element to consider
  * \param name     Node name to look for
- * \param parent   Pointer to location to receive unreffed node pointer
+ * \param parent   Pointer to location to receive borrowed node pointer
  * \return DOM_NO_ERR.
  */
 dom_exception dom_element_parent_node(dom_element *element,

@@ -259,9 +259,9 @@ enum dom_walk_cmd dump_dom_structure__cb(
 		enum dom_walk_stage stage,
 		dom_node_type type,
 		dom_node *node,
-		void *ctx)
+		void *pw)
 {
-	int *depth = ctx;
+	int *depth = pw;
 
 	switch (type) {
 	case DOM_ELEMENT_NODE:

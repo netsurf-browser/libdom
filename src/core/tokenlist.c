@@ -227,7 +227,7 @@ static dom_exception _dom_tokenlist_reify(dom_tokenlist *list)
 
 	if (list->len == 0) {
 		if (list->last_set != NULL) {
-			dom_node_unref(list->last_set);
+			dom_string_unref(list->last_set);
 		}
 		list->last_set = dom_string_ref(
 			list->ele->base.owner->_memo_empty);

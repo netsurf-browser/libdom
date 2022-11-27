@@ -48,12 +48,12 @@ static void _dom_tokenlist_handle_attrmodified(dom_event *evt, void *pw)
 	dom_string *value;
 
 	{
-		dom_node *target;
+		dom_event_target *target;
 		exc = dom_event_get_target(evt, &target);
 		if (exc != DOM_NO_ERR)
 			return;
 		dom_node_unref(target);
-		if (target != (dom_node *)list->ele)
+		if (target != (dom_event_target *)list->ele)
 			return;
 	}
 

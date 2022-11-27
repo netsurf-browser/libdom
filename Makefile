@@ -69,7 +69,7 @@ INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/entity_ref.h
 INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/element.h;$(Is)/exceptions.h
 INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/implementation.h
 INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/namednodemap.h;$(Is)/node.h
-INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/nodelist.h;$(Is)/string.h
+INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/nodelist.h;$(Is)/tokenlist.h;$(Is)/string.h
 INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/pi.h
 INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/text.h;$(Is)/typeinfo.h
 

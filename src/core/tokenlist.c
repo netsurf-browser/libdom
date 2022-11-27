@@ -49,7 +49,7 @@ static void _dom_tokenlist_handle_attrmodified(dom_event *evt, void *pw)
 
 	{
 		dom_node *target;
-		exc = dom_event_get_target(mutevt, &target);
+		exc = dom_event_get_target(evt, &target);
 		if (exc != DOM_NO_ERR)
 			return;
 		dom_node_unref(target);

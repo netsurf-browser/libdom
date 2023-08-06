@@ -346,7 +346,11 @@ void xml_parser_end_document(void *ctx)
 	/* Get XML node */
 	err = dom_node_get_user_data((struct dom_node *) parser->doc,
 			parser->udkey, (void **) (void *) &node);
-	if (err != DOM_NO_ERR) {
+
+	/* The return value from dom_node_get_user_data() is always
+	 * DOM_NO_ERR, but the returned "node" will be NULL if no user
+	 * data is found. */
+	if (err != DOM_NO_ERR || node == NULL) {
 		parser->msg(DOM_MSG_WARNING, parser->mctx,
 				"Failed finding XML node");
 		return;

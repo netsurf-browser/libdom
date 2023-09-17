@@ -305,9 +305,14 @@ void xml_parser_start_document(void *ctx)
 {
 	dom_xml_parser *parser = (dom_xml_parser *) ctx;
 	dom_exception err;
+	xmlErrorPtr xmlerr;
 
 	/* Invoke libxml2's default behaviour */
 	xmlSAX2StartDocument(parser->xml_ctx);
+	xmlerr = xmlCtxtGetLastError(parser->xml_ctx);
+	if (xmlerr != NULL && xmlerr->level >= XML_ERR_ERROR) {
+		return;
+	}
 
 	/* Link nodes together */
 	err = xml_parser_link_nodes(parser, (struct dom_node *) parser->doc,
@@ -329,9 +334,14 @@ void xml_parser_end_document(void *ctx)
 	xmlNodePtr node;
 	xmlNodePtr n;
 	dom_exception err;
+	xmlErrorPtr xmlerr;
 
 	/* Invoke libxml2's default behaviour */
 	xmlSAX2EndDocument(parser->xml_ctx);
+	xmlerr = xmlCtxtGetLastError(parser->xml_ctx);
+	if (xmlerr != NULL && xmlerr->level >= XML_ERR_ERROR) {
+		return;
+	}
 
 	/* If there is no document, we can't do anything */
 	if (parser->doc == NULL) {
@@ -401,11 +411,16 @@ void xml_parser_start_element_ns(void *ctx, const xmlChar *localname,
 {
 	dom_xml_parser *parser = (dom_xml_parser *) ctx;
 	xmlNodePtr parent = parser->xml_ctx->node;
+	xmlErrorPtr xmlerr;
 
 	/* Invoke libxml2's default behaviour */
 	xmlSAX2StartElementNs(parser->xml_ctx, localname, prefix, URI,
 			nb_namespaces, namespaces, nb_attributes,
 			nb_defaulted, attributes);
+	xmlerr = xmlCtxtGetLastError(parser->xml_ctx);
+	if (xmlerr != NULL && xmlerr->level >= XML_ERR_ERROR) {
+		return;
+	}
 
 	/* If there is no document, we can't do anything */
 	if (parser->doc == NULL) {
@@ -470,9 +485,14 @@ void xml_parser_end_element_ns(void *ctx, const xmlChar *localname,
 	dom_xml_parser *parser = (dom_xml_parser *) ctx;
 	xmlNodePtr node = parser->xml_ctx->node;
 	xmlNodePtr n;
+	xmlErrorPtr xmlerr;
 
 	/* Invoke libxml2's default behaviour */
 	xmlSAX2EndElementNs(parser->xml_ctx, localname, prefix, URI);
+	xmlerr = xmlCtxtGetLastError(parser->xml_ctx);
+	if (xmlerr != NULL && xmlerr->level >= XML_ERR_ERROR) {
+		return;
+	}
 
 	/* If there is no document, we can't do anything */
 	if (parser->doc == NULL) {

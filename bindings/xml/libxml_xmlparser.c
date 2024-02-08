@@ -317,7 +317,11 @@ dom_xml_error dom_xml_parser_completed(dom_xml_parser *parser)
 void xml_parser_start_document(void *ctx)
 {
 	dom_xml_parser *parser = (dom_xml_parser *) ctx;
+#if LIBXML_VERSION >= 21200
+	const xmlError *xmlerr;
+#else
 	xmlErrorPtr xmlerr;
+#endif
 
 	if (parser->err != DOM_NO_ERR)
 		return;
@@ -349,7 +353,11 @@ void xml_parser_end_document(void *ctx)
 	dom_xml_parser *parser = (dom_xml_parser *) ctx;
 	xmlNodePtr node;
 	xmlNodePtr n;
+#if LIBXML_VERSION >= 21200
+	const xmlError *xmlerr;
+#else
 	xmlErrorPtr xmlerr;
+#endif
 
 	if (parser->err != DOM_NO_ERR)
 		return;
@@ -431,7 +439,11 @@ void xml_parser_start_element_ns(void *ctx, const xmlChar *localname,
 {
 	dom_xml_parser *parser = (dom_xml_parser *) ctx;
 	xmlNodePtr parent = parser->xml_ctx->node;
+#if LIBXML_VERSION >= 21200
+	const xmlError *xmlerr;
+#else
 	xmlErrorPtr xmlerr;
+#endif
 
 	if (parser->err != DOM_NO_ERR)
 		return;
@@ -510,7 +522,11 @@ void xml_parser_end_element_ns(void *ctx, const xmlChar *localname,
 	dom_xml_parser *parser = (dom_xml_parser *) ctx;
 	xmlNodePtr node = parser->xml_ctx->node;
 	xmlNodePtr n;
+#if LIBXML_VERSION >= 21200
+	const xmlError *xmlerr;
+#else
 	xmlErrorPtr xmlerr;
+#endif
 
 	if (parser->err != DOM_NO_ERR)
 		return;

@@ -2241,15 +2241,15 @@ dom_exception _dom_merge_adjacent_text(dom_node_internal *p,
 	assert(p->type == DOM_TEXT_NODE);
 	assert(n->type == DOM_TEXT_NODE);
 
-	err = dom_text_get_whole_text(n, &str);
+	err = dom_characterdata_get_data(n, &str);
 	if (err != DOM_NO_ERR)
 		return err;
 	
 	err = dom_characterdata_append_data(p, str);
+	dom_string_unref(str);
+
 	if (err != DOM_NO_ERR)
 		return err;
-
-	dom_string_unref(str);
 
 	return DOM_NO_ERR;
 }

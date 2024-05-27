@@ -5,6 +5,9 @@ TESTCFLAGS := $(TESTCFLAGS) -I$(DIR) -I$(DIR)testutils -Ibindings/xml -Ibindings
 
 ALL_XML_TESTS :=
 
+WANT_XML_TEST := $(WANT_TEST)
+# WANT_XML_TEST := no
+
 # 1: Path to XML file
 # 2: Fragment C file name
 # 3: DTD file
@@ -12,7 +15,7 @@ ALL_XML_TESTS :=
 define do_xml_test
 
 
-ifeq ($$(WANT_TEST),yes)
+ifeq ($$(WANT_XML_TEST),yes)
 
 $(DIR)$2: $(DIR)testcases/tests/$1 $(DIR)transform.pl  $(DIR)DOMTSHandler.pm
 	$(VQ)$(ECHO) "   XFORM: $1"
@@ -48,10 +51,14 @@ endef
 $(DIR)INDEX: test/Makefile
 	$(VQ)$(ECHO) "   INDEX: Making test index"
 	$(Q)$(ECHO) "#test	desc	dir" > $@
+ifeq ($(WANT_XML_TEST),yes)
 	$(foreach XMLTEST,$(sort $(ALL_XML_TESTS)),$(call write_index,$(XMLTEST)))
+endif
+	$(Q)$(ECHO) "normalize	Normalize nodes	normalize" > $@
 
 TEST_PREREQS := $(TEST_PREREQS) $(DIR)INDEX
 
+DIR_TEST_ITEMS := $(DIR_TEST_ITEMS) normalize:normalize.c;$(testutils_files)
 # Include the level 1 core tests
 $(eval $(call do_xml_suite,level1/core,dom1-interfaces.xml))
 # Include level 1 html tests

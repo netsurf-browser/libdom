@@ -484,7 +484,7 @@ dom_xml_parser_create(const char *enc, const char *int_enc,
 
 	UNUSED(int_enc);
 
-	parser = calloc(sizeof(*parser), 1);
+	parser = calloc(1, sizeof(*parser));
 	if (parser == NULL) {
 		msg(DOM_MSG_CRITICAL, mctx, "No memory for parser");
 		return NULL;

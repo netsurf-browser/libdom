@@ -993,13 +993,7 @@ dom_exception _dom_node_remove_child(dom_node_internal *node,
 	/* Detach the node */
 	_dom_node_detach(old_child);
 
-	/* When a Node is removed, it should be destroy. When its refcnt is not 
-	 * zero, it will be added to the document's deletion pending list. 
-	 * When a Node is removed, its parent should be NULL, but its owner
-	 * should remain to be the document. */
-	dom_node_ref(old_child);
-	dom_node_try_destroy(old_child);
-	*result = old_child;
+	*result = (dom_node_internal *) dom_node_ref(old_child);
 
 	success = true;
 	err = _dom_dispatch_subtree_modified_event(node->owner, node,

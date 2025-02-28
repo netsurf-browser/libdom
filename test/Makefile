@@ -54,11 +54,13 @@ $(DIR)INDEX: test/Makefile
 ifeq ($(WANT_XML_TEST),yes)
 	$(foreach XMLTEST,$(sort $(ALL_XML_TESTS)),$(call write_index,$(XMLTEST)))
 endif
-	$(Q)$(ECHO) "normalize	Normalize nodes	normalize" > $@
+	$(Q)$(ECHO) "normalize	Normalize nodes	normalize" >> $@
+	$(Q)$(ECHO) "normalize2	Normalize nodes	normalize2" >> $@
 
 TEST_PREREQS := $(TEST_PREREQS) $(DIR)INDEX
 
 DIR_TEST_ITEMS := $(DIR_TEST_ITEMS) normalize:normalize.c;$(testutils_files)
+DIR_TEST_ITEMS := $(DIR_TEST_ITEMS) normalize2:normalize2.c;$(testutils_files)
 # Include the level 1 core tests
 $(eval $(call do_xml_suite,level1/core,dom1-interfaces.xml))
 # Include level 1 html tests

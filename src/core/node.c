@@ -1180,7 +1180,7 @@ dom_exception _dom_node_normalize(dom_node_internal *node)
 				return err;
 
 			_dom_node_detach(n);
-			dom_node_unref(n);
+			dom_node_try_destroy(n);
 			n = p->next;
 			continue;
 		}

@@ -10,7 +10,13 @@
 
 #include "testutils/domts.h"
 
-#ifdef __linux__
+#if defined(__has_feature)
+# if __has_feature(address_sanitizer)
+#  define __SANITIZE_ADDRESS__
+# endif
+#endif
+
+#if defined(__linux__) && !defined(__SANITIZE_ADDRESS__)
 
 #include <sys/time.h>
 #include <sys/resource.h>

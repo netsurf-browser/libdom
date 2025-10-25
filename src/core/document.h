@@ -70,6 +70,8 @@ struct dom_document {
 	dom_string *_memo_domattrmodified; /**< DOMAttrModified */
 	dom_string *_memo_domcharacterdatamodified; /**< DOMCharacterDataModified */
 	dom_string *_memo_domsubtreemodified; /**< DOMSubtreeModified */
+
+	uint32_t dispatching_mutation; /**< Mutation event semaphore */
 };
 
 /* Create a DOM document */

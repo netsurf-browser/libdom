@@ -2008,6 +2008,21 @@ bool _dom_node_permitted_child(const dom_node_internal *parent,
 bool _dom_node_readonly(const dom_node_internal *node)
 {
 	const dom_node_internal *n = node;
+	dom_document *doc;
+
+	/* Reject modification attempts from mutation event handlers.
+	 * These events have been deprecated since 2011, and are
+	 * architecturally unsafe (as handlers could recursively mutate the
+	 * document). Treat the node as readonly if the owning document is
+	 * in the middle of dispatching a mutation event. This will cause
+	 * the event handler to fail, but that is reasonable, as nothing
+	 * should be listening for these events (we retain support for them
+	 * as they are useful as synchronous notifications for components
+	 * which do not attempt to mutate the DOM tree from the event
+	 * handler). */
+	doc = dom_node_get_owner(n);
+	if (doc != NULL && doc->dispatching_mutation > 0)
+		return true;
 
 	/* DocumentType and Notation ns are read only */
 	if (n->type == DOM_DOCUMENT_TYPE_NODE ||
@@ -2394,6 +2409,21 @@ static inline dom_exception _dom_event_targets_expand(
 	return DOM_NO_ERR;
 }
 
+/* Helper to determine if an event is a mutation event */
+static bool _event_is_mutation(dom_document *doc, struct dom_event *evt)
+{
+	return dom_string_isequal(evt->type, doc->_memo_domnodeinserted) ||
+		dom_string_isequal(evt->type, doc->_memo_domnoderemoved) ||
+		dom_string_isequal(evt->type,
+				doc->_memo_domnodeinsertedintodocument) ||
+		dom_string_isequal(evt->type,
+				doc->_memo_domnoderemovedfromdocument) ||
+		dom_string_isequal(evt->type, doc->_memo_domattrmodified) ||
+		dom_string_isequal(evt->type,
+				doc->_memo_domcharacterdatamodified) ||
+		dom_string_isequal(evt->type, doc->_memo_domsubtreemodified);
+}
+
 /**
  * Dispatch an event into the implementation's event model
  *
@@ -2443,7 +2473,12 @@ dom_exception _dom_node_dispatch_event(dom_event_target *et,
 		 * no document at all, do nothing for this kind of node */
 		return DOM_NO_ERR;
 	}
-	
+
+	/* Increment semaphore if mutation event (c.f. _dom_node_readonly) */
+	if (_event_is_mutation(doc, evt)) {
+		doc->dispatching_mutation++;
+	}
+
 	*success = true;
 
 	/* Initialise array of targets for capture/bubbling phases */
@@ -2565,6 +2600,10 @@ dom_exception _dom_node_dispatch_event(dom_event_target *et,
 	}
 
 cleanup:
+	if (_event_is_mutation(doc, evt)) {
+		doc->dispatching_mutation--;
+	}
+
 	if (evt->prevent_default == true) {
 		*success = false;
 	}

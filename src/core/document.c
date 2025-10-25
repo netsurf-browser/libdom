@@ -286,6 +286,8 @@ dom_exception _dom_document_initialise(dom_document *doc,
 		return err;
 	}
 
+	doc->dispatching_mutation = 0;
+
 	/* We should not pass a NULL when all things hook up */
 	return _dom_document_event_internal_initialise(&doc->dei, daf, daf_ctx);
 }

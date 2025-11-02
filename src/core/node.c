@@ -1059,6 +1059,7 @@ dom_exception _dom_node_has_child_nodes(dom_node_internal *node, bool *result)
  * \param deep    True to deep-clone the node's sub-tree
  * \param result  Pointer to location to receive result
  * \return DOM_NO_ERR        on success,
+ *         DOM_NO_MODIFICATION_ALLOWED_ERR if ::node's owner is readonly, or
  *         DOM_NO_MEMORY_ERR on memory exhaustion.
  *
  * The returned node will already be referenced.
@@ -1098,11 +1099,16 @@ dom_exception _dom_node_has_child_nodes(dom_node_internal *node, bool *result)
 dom_exception _dom_node_clone_node(dom_node_internal *node, bool deep,
 		dom_node_internal **result)
 {
-	dom_node_internal *n, *child, *r;
+	dom_node_internal *n, *child;
 	dom_exception err;
 	dom_user_data *ud;
 
 	assert(node->owner != NULL);
+
+	/* Ensure node's owner is not readonly */
+	if (_dom_node_readonly_owner(node)) {
+		return DOM_NO_MODIFICATION_ALLOWED_ERR;
+	}
 
 	err = dom_node_copy(node, &n);
 	if (err != DOM_NO_ERR) {
@@ -1112,14 +1118,16 @@ dom_exception _dom_node_clone_node(dom_node_internal *node, bool deep,
 	if (deep) {
 		child = node->first_child;
 		while (child != NULL) {
-			err = dom_node_clone_node(child, deep, (void *) &r);
+			dom_node_internal *cc, *r;
+			err = dom_node_clone_node(child, deep, (void *) &cc);
 			if (err != DOM_NO_ERR) {
 				dom_node_unref(n);
 				return err;
 			}
 
-			err = dom_node_append_child(n, r, (void *) &r);
+			err = dom_node_append_child(n, cc, (void *) &r);
 			if (err != DOM_NO_ERR) {
+				dom_node_unref(cc);
 				dom_node_unref(n);
 				return err;
 			}
@@ -1127,7 +1135,7 @@ dom_exception _dom_node_clone_node(dom_node_internal *node, bool deep,
 			/* Clean up the new node, we have reference it two
 			 * times */
 			dom_node_unref(r);
-			dom_node_unref(r);
+			dom_node_unref(cc);
 			child = child->next;
 		}
 	}
@@ -1150,7 +1158,8 @@ dom_exception _dom_node_clone_node(dom_node_internal *node, bool deep,
  * Normalize a DOM node
  *
  * \param node  The node to normalize
- * \return DOM_NO_ERR.
+ * \return DOM_NO_ERR on success, or
+ *         DOM_NO_MODIFICATION_ALLOWED_ERR if ::node is readonly.
  *
  * Puts all Text nodes in the full depth of the sub-tree beneath ::node,
  * including Attr nodes into "normal" form, where only structure separates
@@ -1160,6 +1169,10 @@ dom_exception _dom_node_normalize(dom_node_internal *node)
 {
 	dom_node_internal *n, *p;
 	dom_exception err;
+
+	if (_dom_node_readonly(node)) {
+		return DOM_NO_MODIFICATION_ALLOWED_ERR;
+	}
 
 	p = node->first_child;
 	if (p == NULL)
@@ -1441,6 +1454,7 @@ dom_exception _dom_node_compare_document_position(dom_node_internal *node,
 dom_exception _dom_node_get_text_content(dom_node_internal *node,
 		dom_string **result)
 {
+	dom_exception err;
 	dom_node_internal *n;
 	dom_string *str = NULL;
 	dom_string *ret = NULL;
@@ -1454,9 +1468,12 @@ dom_exception _dom_node_get_text_content(dom_node_internal *node,
 		dom_node_get_text_content(n, (str == NULL) ? &str : &ret);
 		if (ret != NULL) {
 			dom_string *new_str;
-			dom_string_concat(str, ret, &new_str);
+			err = dom_string_concat(str, ret, &new_str);
 			dom_string_unref(str);
 			dom_string_unref(ret);
+			if (err != DOM_NO_ERR) {
+				return err;
+			}
 			str = new_str;
 		}
 	}
@@ -1485,6 +1502,11 @@ dom_exception _dom_node_set_text_content(dom_node_internal *node,
 	dom_text *text;
 	dom_exception err;
 
+	/* Ensure node is writable */
+	if (_dom_node_readonly(node)) {
+		return DOM_NO_MODIFICATION_ALLOWED_ERR;
+	}
+
 	n = node->first_child;
 
 	while (n != NULL) {
@@ -1508,11 +1530,13 @@ dom_exception _dom_node_set_text_content(dom_node_internal *node,
 		return err;
 
 	err = dom_node_append_child(node, text, (void *) &r);
+	if (err == DOM_NO_ERR) {
+		/* Discard ref from append_child */
+		dom_node_unref(r);
+	}
 
 	/* The node is held alive as a child here, so unref it */
 	dom_node_unref(text);
-	/* And unref it a second time because append_child reffed it too */
-	dom_node_unref(r);
 
 	return err;
 }
@@ -2000,12 +2024,7 @@ bool _dom_node_permitted_child(const dom_node_internal *parent,
 	return valid;
 }
 
-/**
- * Determine if a node is read only
- *
- * \param node  The node to consider
- */
-bool _dom_node_readonly(const dom_node_internal *node)
+bool _dom_node_readonly_owner(const dom_node_internal *node)
 {
 	const dom_node_internal *n = node;
 	dom_document *doc;
@@ -2023,6 +2042,22 @@ bool _dom_node_readonly(const dom_node_internal *node)
 	doc = dom_node_get_owner(n);
 	if (doc != NULL && doc->dispatching_mutation > 0)
 		return true;
+
+	return false;
+}
+
+/**
+ * Determine if a node is read only
+ *
+ * \param node  The node to consider
+ */
+bool _dom_node_readonly(const dom_node_internal *node)
+{
+	const dom_node_internal *n = node;
+
+	if (_dom_node_readonly_owner(n)) {
+		return true;
+	}
 
 	/* DocumentType and Notation ns are read only */
 	if (n->type == DOM_DOCUMENT_TYPE_NODE ||

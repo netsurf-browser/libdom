@@ -61,9 +61,7 @@ void dom_string_destroy(dom_string *str)
 		assert(istr->base.refcnt == 0);
 		switch (istr->type) {
 		case DOM_STRING_INTERNED:
-			if (istr->data.intern != NULL) {
-				lwc_string_unref(istr->data.intern);
-			}
+			lwc_string_unref(istr->data.intern);
 			break;
 		case DOM_STRING_CDATA:
 			free(istr->data.cdata.ptr);
